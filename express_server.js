@@ -13,12 +13,21 @@ const generateRandomString = function() {
   return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 6);
 };
 
+
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-const bodyParser = require("body-parser");
+const bodyParser = require("body-parser");        //add body-parser
 app.use(bodyParser.urlencoded({extended: true}));
+
+app.get("/u/:shortURL", (req, res) => {      //redirect the shortURL to the longURL
+  let longURL = urlDatabase[req.params.shortURL];
+  console.log(req);
+  res.redirect(longURL);
+});
+
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -59,18 +68,17 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
-  console.log(req);
-  res.redirect(longURL);
+app.post("/urls/:shortURL/delete", (req, res) => {     //delete the shortURL
+  const shortToDelete = req.params.shortURL;
+  delete urlDatabase[shortToDelete];
+  res.redirect("/urls");
 });
-
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 
-app.listen(PORT, () => {
+app.listen(PORT, () => {       //port active and listening
   console.log(`Example app listening on port ${PORT}!`);
 });
