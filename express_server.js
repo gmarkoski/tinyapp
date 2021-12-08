@@ -19,18 +19,15 @@ const generateRandomString = function() {
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 
-
-// this code '/' requests the homepage
-app.get("/", (req, res) => {
-  res.send("Hello!\n");
-});
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-app.get("/urls.json", (req, res) => {
+app.get("/", (req, res) => {
+  res.send("Hello!\n");
+});
 
+app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
@@ -63,6 +60,16 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+   
+  if (!email || !password) {
+    return res.status(400).send('Email and Password cannot be blank');
+  }
+  res.render('register');
+});
+
 app.post("/urls/:id", (req,res) => {
   urlDatabase[req.params.id] = req.body.EditField;
   res.redirect('/urls');
@@ -93,3 +100,4 @@ app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect("/urls");
 });
+
