@@ -19,6 +19,24 @@ const generateRandomString = function() {
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const users = {
+  123: {
+    id: '001',
+    email: 'g@g.com',
+    password: 'abcd'
+  }
+};
+
+const findUserByEmail = (email) => {
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      return user;
+    }
+  }
+  return null;
+};
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -60,14 +78,38 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.get("/register", (req, res) => {
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
    
   if (!email || !password) {
     return res.status(400).send('Email and Password cannot be blank');
   }
-  res.render('register');
+
+  const user = findUserByEmail(email);
+
+  if (email !== password) {
+    return res.status(400).send('Email and Password do not match');
+  }
+
+  if (user) {
+    return res.status(400).send("a user already exists with that email")
+  }
+  const id = Math.floor(Math.random() * 2000) + 1;
+
+  users[id] = {
+    id: id,
+    email: email,
+    password: password
+  };
+  console.log('users', users);
+  res.redirect('/login');
+
+  res.redirect('urls');
 });
 
 app.post("/urls/:id", (req,res) => {
