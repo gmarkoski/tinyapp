@@ -4,6 +4,21 @@
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+    <% if(username){ %>
+      <form method="POST" action="/logout">
+        <h3>
+          <label><%= username %></label>
+        </h3>
+        <button type="submit" class="btn btn-primary">Logout</button>
+      </form>
+      <% } else{ %>
+      <form method="POST" action="/login">
+        <input name="username" type="text" />
+        <h3>
+          <button type="submit" class="btn btn-primary">Login</button>
+        </h3>
+      </form>
+      <% } %>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
