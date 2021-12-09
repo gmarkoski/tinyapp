@@ -20,11 +20,11 @@
       <div>
         <% if(user) { %>
         <form method="POST" action="/logout">
-          <h1>
-            <label><%= user.email %></label>
-          </h1>
           <button type="submit" class="btn btn-primary">Logout</button>
         </form>
+        <h1>
+          <label><%= user.email %></label>
+        </h1>
         <% } else { %>
           <div class="navbar-nav">
             <a class="nav-item nav-link" href="/register">Register New Account</a>

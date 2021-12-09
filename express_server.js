@@ -6,10 +6,7 @@ const cookieParser = require('cookie-parser');
 app.set("view engine", "ejs");
 app.use(cookieParser());
 
-const urlDatabase = {
-  b2xVn2: "http://lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-};
+
 
 // this code generates a random string up to 6 characters long
 const generateRandomString = function() {
@@ -21,21 +18,43 @@ const res = require("express/lib/response");
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const users = {
-  123: {
-    id: '001',
-    email: 'g@g.com',
-    password: 'abcd'
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
   }
 };
 
 const findUserByEmail = (email) => {
-  for (const userId in users) {
+  for (let userId in users) {
     const user = users[userId];
     if (user.email === email) {
       return user;
     }
   }
   return null;
+};
+
+// const urlDatabase = {
+//   b2xVn2: "http://lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com",
+// };
+
+
+const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
 };
 
 app.listen(PORT, () => {
@@ -65,14 +84,14 @@ app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     user: user,
-    userId: userId,
+    //userId: userId,
   };
   console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
+  const templateVars = {                           //had to add in for urls_new to work
     user: users[req.cookies["user_id"]],
   };
   const userID = req.cookies["user_id"];
@@ -80,7 +99,7 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");
   } else {
     const templateVars = {
-      user: users[req.cookies["user_id"]],           // had to add this back in to fixe 'user not defined' error
+      user: users[req.cookies["user_id"]],           // had to add this back in to fix 'user not defined' error
       userID,
     };
     res.render("urls_new", templateVars);
@@ -88,9 +107,12 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
   const templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
+    user: user,
   };
   
   res.render("urls_show", templateVars);
@@ -189,7 +211,8 @@ app.post("/urls", (req, res) => {
   // this is the section that assigns a random string to shortURL, then saves the short/long key pairs to the database
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  let userID = req.cookies["user_id"];
+  urlDatabase[shortURL] = {longURL: longURL, userID: userID};
 
   res.redirect(`/urls/${shortURL}`);
 });
