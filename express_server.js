@@ -17,6 +17,7 @@ const generateRandomString = function() {
 };
 
 const bodyParser = require("body-parser");
+const res = require("express/lib/response");
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const users = {
@@ -71,10 +72,19 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {                   //added in for curiosity
+  const templateVars = {
     user: users[req.cookies["user_id"]],
   };
-  res.render("urls_new", templateVars);
+  const userID = req.cookies["user_id"];
+  if (!userID) {                                   // if  not logged in, redirect them to login
+    res.redirect("/login");
+  } else {
+    const templateVars = {
+      user: users[req.cookies["user_id"]],           // had to add this back in to fixe 'user not defined' error
+      userID,
+    };
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -82,6 +92,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
   };
+  
   res.render("urls_show", templateVars);
 });
 
