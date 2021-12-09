@@ -71,7 +71,10 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {                   //added in for curiosity
+    user: users[req.cookies["user_id"]],
+  };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -93,7 +96,25 @@ app.get('/login', (req, res) => {
   res.render('login', templateVars);
 });
 
+app.get('/urls_new', (req, res) => {
+  const userId = req.cookies.user_id;
 
+  if (!userId) {
+    return res.status(401).send("you are not authorized to be here");
+  }
+
+  const user = users[userId];
+
+  if (!user) {
+    return res.status(400).send("you have an old cookie. Please create an account or login");
+  }
+
+  const templateVars = {
+    email: user.email,
+  };
+
+  res.render('urls_new', templateVars);
+});
 
 app.post('/login', (req, res) => {
   // console.log('req.body', req.body);
@@ -170,4 +191,3 @@ app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
 });
-
