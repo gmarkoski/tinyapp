@@ -59,9 +59,12 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"],
+    user: user,
+    userId: userId,
   };
   res.render("urls_index", templateVars);
 });
@@ -89,26 +92,19 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send('Email and Password cannot be blank');
   }
-
   const user = findUserByEmail(email);
-
-  if (email !== password) {
-    return res.status(400).send('Email and Password do not match');
-  }
-
+  
   if (user) {
-    return res.status(400).send("a user already exists with that email")
+    return res.status(400).send("user already exists with that email");
   }
   const id = Math.floor(Math.random() * 2000) + 1;
-
   users[id] = {
     id: id,
     email: email,
     password: password
   };
-  console.log('users', users);
-  res.redirect('/login');
-
+  res.cookie('userId', id);
+  //console.log('userId');
   res.redirect('urls');
 });
 
@@ -134,12 +130,12 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  res.cookie("user_id", req.body.user_id);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect("/urls");
 });
 

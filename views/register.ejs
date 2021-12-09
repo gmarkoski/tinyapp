@@ -7,28 +7,18 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
-    <title>New URL - TinyApp Example</title>
+    <title>Registration</title>
   </head>
 
   <body>
-
-    <%- include('partials/_header') %>
-
-    <% if (messages.error) { %>
-      <p style="color:red"><%- messages.error %></p>
-      <% } %>
-      <% if (messages.success) { %>
-      <p style="color:green"><%- messages.success %></p>
-      <% } %>
-
       <h1>Register</h1>
-      <p>already a user? <a href="/login">go to login</a></p>
+      <!-- <p>already a user? <a href="/login">go to login</a></p> -->
       <form method="POST" action="/register">
-        <label>email</label>
+        <label>Email  </label>
         <input name="email" required/>
         <br />
     
-        <label>password</label>
+        <label>Password</label>
         <input name="password" />
         <br />
     
