@@ -3,27 +3,29 @@
     <a class="navbar-brand" href="/urls">TinyApp</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
-    </button>
-    <% if(userId) { %>
-      <form method="POST" action="/logout">
-        <h3>
-          <label><%= userId.email %></label>
-        </h3>
-        <button type="submit" class="btn btn-primary">Logout</button>
-      </form>
-      <% } else{ %>
-      <form method="POST" action="/login">
-        <input name="userId" type="text" />
-        <h3>
-          <button type="submit" class="btn btn-primary">Login</button>
-        </h3>
-      </form>
-      <% } %>
+    </button> 
+       
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-  </nav>
+    <div>
+      <% if(user){ %>
+      <form method="POST" action="/logout">
+        <h1>
+          <label><%= user.email %></label>
+        </h1>
+        <button type="submit" class="btn btn-primary">Logout</button>
+      </form>
+      <% } else { %>
+        <div class="navbar-nav">
+          <a class="nav-item nav-link" href="/register">Register New Account</a>
+          <a class="nav-item nav-link" href="/login">Log into your account</a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</nav>
 </header>

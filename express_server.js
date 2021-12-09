@@ -85,6 +85,34 @@ app.get('/register', (req, res) => {
   res.render('register');
 });
 
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
+
+app.post('/login', (req, res) => {
+  // console.log('req.body', req.body);
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).send("email and password cannot be blank");
+  }
+
+  const user = findUserByEmail(email);
+  console.log('user', user);
+  
+  if (!user) {
+    return res.status(400).send("a user with that email does not exist");
+  }
+
+  if (user.password !== password) {
+    return res.status(400).send('password does not match');
+  }
+  res.cookie('user_id', user.id);
+  res.redirect('/urls');
+});
+
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -129,10 +157,10 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/login", (req, res) => {
-  res.cookie("user_id", req.body.user_id);
-  res.redirect("/urls");
-});
+// app.post("/login", (req, res) => {
+//   res.cookie("user_id", req.body.user_id);
+//   res.redirect("/urls");
+// });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
