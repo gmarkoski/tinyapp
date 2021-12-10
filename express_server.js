@@ -114,8 +114,14 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlDatabase[req.params.shortURL]["longURL"],
     user: user,
   };
+  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session["user_id"];
+  if (urlBelongsToUser === true) {
+    // console.log(req.body.longURL);
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(403).send("must be logged in to view");
+  }
   
-  res.render("urls_show", templateVars);
 });
 
 app.get('/register', (req, res) => {
@@ -196,14 +202,27 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/urls/:id", (req,res) => {
-  urlDatabase[req.params.id] = req.body.EditField;
-  res.redirect('/urls');
+  // urlDatabase[req.params.id] = req.body.EditField;
+
+  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session["user_id"];
+  if (urlBelongsToUser === true) {
+    // console.log(req.body.longURL);
+    res.redirect('/urls');
+  } else {
+    res.status(403).send("must be logged in to view");
+    // console.log(req.body.longURL,"error");
+  };
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const idToDelete = req.params.shortURL;
-  delete urlDatabase[idToDelete];
-  res.redirect("/urls");
+  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session["user_id"];
+  if (urlBelongsToUser === true) {
+    const idToDelete = req.params.shortURL;
+    delete urlDatabase[idToDelete];
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("must be logged in to view");
+  };
 });
 
 app.post("/urls", (req, res) => {
@@ -213,14 +232,17 @@ app.post("/urls", (req, res) => {
   let longURL = req.body.longURL;
   let userID = req.cookies["user_id"];
   urlDatabase[shortURL] = {longURL: longURL, userID: userID};
+  
+  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session["user_id"];
+  if (urlBelongsToUser === true) {
+    // console.log(req.body.longURL);
+    res.redirect('/urls');
+  } else {
+    res.status(403).send("must be logged in to view");
+    // console.log(req.body.longURL,"error");
+  }
+});    
 
-  res.redirect(`/urls/${shortURL}`);
-});
-
-// app.post("/login", (req, res) => {
-//   res.cookie("user_id", req.body.user_id);
-//   res.redirect("/urls");
-// });
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
