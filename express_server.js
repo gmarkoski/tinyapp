@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
@@ -26,7 +27,7 @@ const users = {
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "dishwasher"
   }
 };
 
@@ -159,6 +160,7 @@ app.post('/login', (req, res) => {
   // console.log('req.body', req.body);
   const email = req.body.email;
   const password = req.body.password;
+  
 
   if (!email || !password) {
     return res.status(403).send("email and password cannot be blank");
@@ -171,9 +173,10 @@ app.post('/login', (req, res) => {
     return res.status(403).send("a user with that email does not exist");
   }
 
-  if (user.password !== password) {
-    return res.status(403).send('password does not match');
+  if (!bcrypt.compareSync(password, user.password)) {
+    return res.status(403).send("User email or password does not match.");
   }
+  
   res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
@@ -181,8 +184,9 @@ app.post('/login', (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
    
-  if (!email || !password) {
+  if (!email || !hashedPassword) {
     return res.status(403).send('Email and Password cannot be blank');
   }
   const user = findUserByEmail(email);
@@ -194,7 +198,7 @@ app.post("/register", (req, res) => {
   users[id] = {
     id: id,
     email: email,
-    password: password
+    password: hashedPassword,
   };
   res.cookie('user_id', id);
   //console.log('userId');
