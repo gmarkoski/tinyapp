@@ -133,7 +133,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     res.redirect("/urls");
   } else {
     res.status(403).send("must be logged in to view");
-  };
+  }
 });
 
 app.post("/urls", (req, res) => {
