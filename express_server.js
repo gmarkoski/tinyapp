@@ -1,13 +1,11 @@
 const express = require("express");
 const app = express();
 const PORT = 8082;
-//const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 const { findUserByEmail } = require('./helpers');
 
 app.set("view engine", "ejs");
-//app.use(cookieParser());
 app.use(
   cookieSession({
     name: "session",
@@ -15,12 +13,10 @@ app.use(
   }));
 
 
-
 // this code generates a random string up to 6 characters long
 const generateRandomString = function() {
   return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 6);
 };
-
 const bodyParser = require("body-parser");
 const res = require("express/lib/response");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -37,16 +33,6 @@ const users = {
     password: "dishwasher"
   }
 };
-
-// const findUserByEmail = (email, database) => {
-//   for (let userId in users) {
-//     const user = users[userId];
-//     if (user.email === email) {
-//       return user;
-//     }
-//   }
-//   return null;
-// };
 
 const urlDatabase = {
   b6UTxQ: {
@@ -75,10 +61,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
-});
+// ***URL Stuff****
 
 app.get("/urls", (req, res) => {
   const userId = req.session.id;
@@ -89,6 +72,11 @@ app.get("/urls", (req, res) => {
   };
   console.log(templateVars);
   res.render("urls_index", templateVars);
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
 
 app.get("/urls/new", (req, res) => {
@@ -124,15 +112,44 @@ app.get("/urls/:shortURL", (req, res) => {
   
 });
 
-app.get('/register', (req, res) => {
-  res.render('register');
+
+app.post("/urls/:id", (req,res) => {
+  
+
+  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
+  if (urlBelongsToUser === true) {
+    
+    res.redirect('/urls');
+  } else {
+    res.status(403).send("must be logged in to view");
+  }
 });
 
-app.get('/login', (req, res) => {
-  const templateVars = {
-    user: users[req.session.id],
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
+  if (urlBelongsToUser === true) {
+    const idToDelete = req.params.shortURL;
+    delete urlDatabase[idToDelete];
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("must be logged in to view");
   };
-  res.render('login', templateVars);
+});
+
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  // this is the section that assigns a random string to shortURL, then saves the short/long key pairs to the database
+  const shortURL = generateRandomString();
+  const longURL = req.body.longURL;
+  const userID = req.session.id;
+  urlDatabase[shortURL] = {longURL: longURL, userID: userID};
+  
+  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
+  if (urlBelongsToUser === true) {
+    res.redirect('/urls');
+  } else {
+    res.status(403).send("must be logged in to view");
+  }
 });
 
 app.get('/urls_new', (req, res) => {
@@ -153,6 +170,21 @@ app.get('/urls_new', (req, res) => {
 
   res.render('urls_new', templateVars);
 });
+
+
+//***Register, Login, Logout***/
+
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+app.get('/login', (req, res) => {
+  const templateVars = {
+    user: users[req.session.id],
+  };
+  res.render('login', templateVars);
+});
+
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
@@ -200,44 +232,6 @@ app.post("/register", (req, res) => {
   res.redirect('urls');
 });
 
-app.post("/urls/:id", (req,res) => {
-  
-
-  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
-  if (urlBelongsToUser === true) {
-    
-    res.redirect('/urls');
-  } else {
-    res.status(403).send("must be logged in to view");
-  }
-});
-
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
-  if (urlBelongsToUser === true) {
-    const idToDelete = req.params.shortURL;
-    delete urlDatabase[idToDelete];
-    res.redirect("/urls");
-  } else {
-    res.status(403).send("must be logged in to view");
-  };
-});
-
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  // this is the section that assigns a random string to shortURL, then saves the short/long key pairs to the database
-  const shortURL = generateRandomString();
-  const longURL = req.body.longURL;
-  const userID = req.session.id;
-  urlDatabase[shortURL] = {longURL: longURL, userID: userID};
-  
-  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
-  if (urlBelongsToUser === true) {
-    res.redirect('/urls');
-  } else {
-    res.status(403).send("must be logged in to view");
-  }
-});
 
 app.post("/logout", (req, res) => {
   req.session.id = null;
