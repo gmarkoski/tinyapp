@@ -50,7 +50,11 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello!\n");
+  const userID = req.session['user_id'];
+  if (!userID) {  
+    res.redirect("/login");
+  }
+  res.redirect("urls");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -58,21 +62,24 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  res.send("<html><body>Hello<b>World</b></body></html>\n");
 });
 
 // ***URL Stuff****
 
 app.get("/urls", (req, res) => {
-  const userId = req.session.id;
-  const user = users[userId];
+  const userID = req.session["user_id"];
+  const userURLS = urlsForUser(urlDatabase, userID);
   const templateVars = {
-    urls: urlDatabase,
-    user: user,
+    urls: userURLS,
+    user: users[req.session["user_id"]],
   };
-  console.log(templateVars);
+  if (!userID) {
+    res.status(401).send(`You must be logged in to create, view, or edit short URLs. <a href="/login">Log Into Your Account </a>`
+      );
+    return;
+  }
   res.render("urls_index", templateVars);
-});
 
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
@@ -175,7 +182,16 @@ app.get('/urls_new', (req, res) => {
 //***Register, Login, Logout***/
 
 app.get('/register', (req, res) => {
-  res.render('register');
+  const userID = req.session["user_id"];
+  if (!userID) {
+    const templateVars ={
+      urls: urlDatabase,
+      user: users[req.session["user_id"]],
+    };
+    res.render("register", templateVars);
+  } else {
+  res.redirect('/urls');
+  }
 });
 
 app.get('/login', (req, res) => {
@@ -189,15 +205,12 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const user = findUserByEmail(email);
   
-
   if (!email || !password) {
     return res.status(403).send("email and password cannot be blank");
   }
 
-  const user = findUserByEmail(email);
-  console.log('user', user);
-  
   if (!user) {
     return res.status(403).send("a user with that email does not exist");
   }
@@ -211,16 +224,15 @@ app.post('/login', (req, res) => {
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
-  const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-   
+  const user = findUserByEmail(email, users);
+  
   if (!email || !hashedPassword) {
     return res.status(403).send('Email and Password cannot be blank');
   }
-  const user = findUserByEmail(email);
   
   if (user) {
-    return res.status(403).send("user already exists with that email");
+    return res.status(403).send("User already exists with that email");
   }
   const id = Math.floor(Math.random() * 2000) + 1;
   users[id] = {
@@ -234,7 +246,8 @@ app.post("/register", (req, res) => {
 
 
 app.post("/logout", (req, res) => {
-  req.session.id = null;
+  res.clearCookie("session");
+  res.clearCookie("session.sig");
   res.redirect("/urls");
 });
 
