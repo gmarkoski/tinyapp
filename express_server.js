@@ -200,28 +200,33 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const templateVars = {
-    user: users[req.session.id],
-  };
+  const userID = req.session["user_id"];
+  if (!userID) {  
+    const templateVars = {
+      user: users[req.session["user_id"]],
+    };
   res.render('login', templateVars);
+  } else {
+    res.redirect('/urls');
+  }
 });
 
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = findUserByEmail(email);
+  const user = findUserByEmail(email, users);
   
   if (!email || !password) {
-    return res.status(403).send("email and password cannot be blank");
+    return res.status(403).send(`email and password cannot be blank <a href="/login">Log Into Your Account </a>`);
   }
 
   if (!user) {
-    return res.status(403).send("a user with that email does not exist");
+    return res.status(403).send(`a user with that email does not exist <a href="/login">Log Into Your Account </a>`);
   }
 
   if (!bcrypt.compareSync(password, user.password)) {
-    return res.status(403).send("User email or password does not match.");
+    return res.status(403).send(`User email or password does not match <a href="/login">Log Into Your Account </a>`);
   }
   req.session.id = user.id;
   res.redirect('/urls');
