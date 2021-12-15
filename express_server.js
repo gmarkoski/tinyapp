@@ -103,20 +103,32 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const userId = req.session.id;
-  const user = users[userId];
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]["longURL"],
-    user: user,
-  };
-  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
-  if (urlBelongsToUser === true) {
-    res.render("urls_show", templateVars);
-  } else {
-    res.status(403).send("must be logged in to view");
+  const userID = req.session.id;
+  const urlRecord = urlDatabase[req.params.shortURL];
+
+  if (!userID || userID !== urlRecord.userID) {
+    res.status(403).send(`You must be logged in to edit short URLs. <a href="/login">Log Into Your Account </a>`);
+    return;
   }
-  
+
+  const templateVars = {
+    user: users[req.session["user_id"]],
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+  };
+  res.render("urls_show", templateVars);
+});
+
+app.post("/urls/:shortURL", (req, res) => {
+  const userID = req.session["user_id"];
+  const urlRecord = urlDatabase[req.params.shortURL];
+
+  if (!userID || userID !== urlRecord.userID) {
+    res.status(403).send(`You must be logged in to edit short URLs. <a href="/login">Log Into Your Account </a>`);
+    return;
+  }
+  urlDatabase[req.params.shortURL].longURL = req.body.EditField;
+  res.redirect("/urls");
 });
 
 
@@ -133,49 +145,42 @@ app.post("/urls/:id", (req,res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
-  if (urlBelongsToUser === true) {
+  app.post("/urls/:shortURL/delete", (req, res) => {
+    const userID = req.session["user_id"];
+    const urlRecord = urlDatabase[req.params.shortURL];
     const idToDelete = req.params.shortURL;
-    delete urlDatabase[idToDelete];
+  
+    if (!userID || userID !== urlRecord.userID) {
+      res.status(403).send(`You must be logged in to delete short URLs <a href="/login">Log Into Your Account </a>`    );
+    } else {
+      delete urlDatabase[idToDelete];
+    }
     res.redirect("/urls");
-  } else {
-    res.status(403).send("must be logged in to view");
-  }
-});
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  // this is the section that assigns a random string to shortURL, then saves the short/long key pairs to the database
-  const shortURL = generateRandomString();
-  const longURL = req.body.longURL;
   const userID = req.session.id;
+  if (!userID) { 
+    res.status(403).send(`must be logged in to view <a href="/login">Log Into Your Account </a>`);
+  }                 
+  let shortURL = generateRandomString();
+  let longURL = req.body.longURL;
+  let userID = req.session.id;
   urlDatabase[shortURL] = {longURL: longURL, userID: userID};
-  
-  const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
-  if (urlBelongsToUser === true) {
-    res.redirect('/urls');
-  } else {
-    res.status(403).send("must be logged in to view");
-  }
+ 
+  res.redirect('/urls');
 });
 
 app.get('/urls_new', (req, res) => {
   const userId = req.session.id;
   if (!userId) {
-    return res.status(401).send("you are not authorized to be here");
-  }
-
-  const user = users[userId];
-
-  if (!user) {
-    return res.status(400).send("you have an old cookie. Please create an account or login");
+    res.redirect("/login");
   }
 
   const templateVars = {
-    email: user.email,
+    user: users[req.session["user_id"]],
+    userID,
   };
-
-  res.render('urls_new', templateVars);
+  res.render("urls_new", templateVars);
 });
 
 
