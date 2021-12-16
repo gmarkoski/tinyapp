@@ -25,20 +25,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const users = {
   "userRandomID": {
     id: "userRandomID",
-    email: "user@example.com",
-    password: "purple"
+    email: "a@a.com",
+    password: bcrypt.hashSync("123", 10)
   },
   "user2RandomID": {
     id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher"
+    email: "b@b.com",
+    password: "123"
   }
 };
 
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userID: "aJ48lW"
+    userID: "userRandomID"
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
@@ -52,7 +52,7 @@ app.listen(PORT, () => {
 
 app.get("/", (req, res) => {
   const userID = req.session['user_id'];
-  if (!userID) {  
+  if (!userID) {
     res.redirect("/login");
   }
   res.redirect("urls");
@@ -69,15 +69,15 @@ app.get("/hello", (req, res) => {
 // ***URL Stuff****
 
 app.get("/urls", (req, res) => {
-  const userID = req.session["user_id"];
-  const userURLS = urlsForUser(urlDatabase, userID);
+  const userId = req.session.userId;
+  const userURLS = urlsForUser(urlDatabase, userId);
+  
   const templateVars = {
     urls: userURLS,
-    user: users[req.session["user_id"]],
+    user: users[req.session.userId],
   };
-  if (!userID) {
-    res.status(401).send(`You must be logged in to create, view, or edit short URLs. <a href="/login">Log Into Your Account </a>`
-      );
+  if (!userId) {
+    res.status(401).send(`You must be logged in to create, view, or edit short URLs. <a href="/login">Log Into Your Account </a>`);
     return;
   }
   res.render("urls_index", templateVars);
@@ -89,32 +89,34 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {                           //had to add in for urls_new to work
-    user: users[req.session.id],
-  };
-  const userID = req.session.id;
-  if (!userID) {                                   // if  not logged in, redirect them to login
+  
+  const userId = req.session.userId;
+  
+  console.log(req.session.userId);
+  if (!userId) {                                   // if  not logged in, redirect them to login
     res.redirect("/login");
   } else {
     const templateVars = {
-      user: users[req.session.id],           // had to add this back in to fix 'user not defined' error
-      userID,
+      user: users[req.session.userId],           // had to add this back in to fix 'user not defined' error
+      userId,
     };
     res.render("urls_new", templateVars);
   }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const userID = req.session.id;
+  const userId = req.session.userId;
   const urlRecord = urlDatabase[req.params.shortURL];
+  console.log("+++++++", userId);
+  console.log(">>>>>>>>", urlDatabase);
 
-  if (!userID || userID !== urlRecord.userID) {
+  if (!userId || userId !== urlRecord.userID) {
     res.status(403).send(`You must be logged in to edit short URLs. <a href="/login">Log Into Your Account </a>`);
     return;
   }
 
   const templateVars = {
-    user: users[req.session["user_id"]],
+    user: users[req.session.userId],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
   };
@@ -122,7 +124,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  const userID = req.session["user_id"];
+  const userID = req.session.userId;
   const urlRecord = urlDatabase[req.params.shortURL];
 
   if (!userID || userID !== urlRecord.userID) {
@@ -136,23 +138,22 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:id", (req,res) => {
   
-
   const urlBelongsToUser = urlDatabase[req.params.id] && urlDatabase[req.params.id].userID === req.session.id;
   if (urlBelongsToUser === true) {
     
     res.redirect('/urls');
   } else {
-    res.status(403).send("must be logged in to view");
+    res.status(403).send(`must be logged in to view <a href="/login">Log Into Your Account </a>`);
   }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const userID = req.session["user_id"];
+  const userId = req.session.userId;
   const urlRecord = urlDatabase[req.params.shortURL];
   const idToDelete = req.params.shortURL;
   
-  if (!userID || userID !== urlRecord.userID) {
-    res.status(403).send(`You must be logged in to delete short URLs <a href="/login">Log Into Your Account </a>`    );
+  if (!userId || userId !== urlRecord.userID) {
+    res.status(403).send(`You must be logged in to delete short URLs <a href="/login">Log Into Your Account </a>`);
   } else {
     delete urlDatabase[idToDelete];
   }
@@ -160,53 +161,35 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const userID = req.session.id;
-  if (!userID) { 
+  const userID = req.session.userId;
+  if (!userID) {
     res.status(403).send(`must be logged in to view <a href="/login">Log Into Your Account </a>`);
-  }                 
+  }
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
   urlDatabase[shortURL] = {longURL: longURL, userID: userID};
- 
-  res.redirect('/urls');
+  res.redirect(`/urls/${shortURL}`);
 });
-
-app.get('/urls_new', (req, res) => {
-  const userId = req.session.id;
-  if (!userId) {
-    res.redirect("/login");
-  }
-
-  const templateVars = {
-    user: users[req.session["user_id"]],
-    userID,
-  };
-  res.render("urls_new", templateVars);
-});
-
 
 //***Register, Login, Logout***/
 
 app.get('/register', (req, res) => {
-  const userID = req.session["user_id"];
-  if (!userID) {
-    const templateVars ={
+  const userId = req.session.userId;
+  if (!userId) {
+    const templateVars = {
       urls: urlDatabase,
-      user: users[req.session["user_id"]],
+      user: users[req.session.userId],
     };
     res.render("register", templateVars);
   } else {
-  res.redirect('/urls');
+    res.redirect('/urls');
   }
 });
 
 app.get('/login', (req, res) => {
-  const userID = req.session["user_id"];
-  if (!userID) {
-    const templateVars = {
-      user: users[req.session["user_id"]],
-    };
-    res.render("login", templateVars);
+    
+  if (!req.session.userId) {
+    return res.render("login");
   } else {
     res.redirect("/urls");
   }
@@ -227,7 +210,7 @@ app.post('/login', (req, res) => {
   if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send(`User email or password does not match.<a href="/login">Log Into Your Account </a>`);
   }
-  req.session.user_id = user.id;
+  req.session.userId = user.id;
   res.redirect("/urls");
 });
 
@@ -249,7 +232,7 @@ app.post("/register", (req, res) => {
     email: email,
     password: hashedPassword,
   };
-  req.session.id = id;
+  req.session.userId = id;
   res.redirect('urls');
 });
 
