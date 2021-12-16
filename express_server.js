@@ -80,6 +80,7 @@ app.get("/urls", (req, res) => {
     return;
   }
   res.render("urls_index", templateVars);
+});
 
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
@@ -145,17 +146,17 @@ app.post("/urls/:id", (req,res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  app.post("/urls/:shortURL/delete", (req, res) => {
-    const userID = req.session["user_id"];
-    const urlRecord = urlDatabase[req.params.shortURL];
-    const idToDelete = req.params.shortURL;
+  const userID = req.session["user_id"];
+  const urlRecord = urlDatabase[req.params.shortURL];
+  const idToDelete = req.params.shortURL;
   
-    if (!userID || userID !== urlRecord.userID) {
-      res.status(403).send(`You must be logged in to delete short URLs <a href="/login">Log Into Your Account </a>`    );
-    } else {
-      delete urlDatabase[idToDelete];
-    }
-    res.redirect("/urls");
+  if (!userID || userID !== urlRecord.userID) {
+    res.status(403).send(`You must be logged in to delete short URLs <a href="/login">Log Into Your Account </a>`    );
+  } else {
+    delete urlDatabase[idToDelete];
+  }
+  res.redirect("/urls");
+});
 
 app.post("/urls", (req, res) => {
   const userID = req.session.id;
@@ -164,7 +165,6 @@ app.post("/urls", (req, res) => {
   }                 
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
-  let userID = req.session.id;
   urlDatabase[shortURL] = {longURL: longURL, userID: userID};
  
   res.redirect('/urls');
@@ -254,11 +254,7 @@ app.post("/register", (req, res) => {
   res.redirect('urls');
 });
 
-
 app.post("/logout", (req, res) => {
-  res.clearCookie("session");
-  res.clearCookie("session.sig");
+  req.session = null;
   res.redirect("/urls");
 });
-
-
