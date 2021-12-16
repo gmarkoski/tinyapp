@@ -4,6 +4,7 @@ const PORT = 8082;
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 const { findUserByEmail } = require('./helpers');
+const { urlsForUser } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(
@@ -201,13 +202,13 @@ app.get('/register', (req, res) => {
 
 app.get('/login', (req, res) => {
   const userID = req.session["user_id"];
-  if (!userID) {  
+  if (!userID) {
     const templateVars = {
       user: users[req.session["user_id"]],
     };
-  res.render('login', templateVars);
+    res.render("login", templateVars);
   } else {
-    res.redirect('/urls');
+    res.redirect("/urls");
   }
 });
 
@@ -216,20 +217,18 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = findUserByEmail(email, users);
-  
+
   if (!email || !password) {
-    return res.status(403).send(`email and password cannot be blank <a href="/login">Log Into Your Account </a>`);
+    return res.status(403).send(`Email and password cannot be blank.<a href="/login">Log Into Your Account </a>`);
   }
-
   if (!user) {
-    return res.status(403).send(`a user with that email does not exist <a href="/login">Log Into Your Account </a>`);
+    return res.status(403).send(`A user with that email does not exist.<a href="/login">Log Into Your Account </a>`);
   }
-
   if (!bcrypt.compareSync(password, user.password)) {
-    return res.status(403).send(`User email or password does not match <a href="/login">Log Into Your Account </a>`);
+    return res.status(403).send(`User email or password does not match.<a href="/login">Log Into Your Account </a>`);
   }
-  req.session.id = user.id;
-  res.redirect('/urls');
+  req.session.user_id = user.id;
+  res.redirect("/urls");
 });
 
 app.post("/register", (req, res) => {

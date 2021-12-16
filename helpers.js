@@ -8,5 +8,16 @@ const findUserByEmail = (email, users) => {
   return null;
 };
 
+const urlsForUser = (urlDatabase, userID) => {
+  let filteredList = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === userID) {
+      filteredList[shortURL] = urlDatabase[shortURL].longURL;
+    }
+  }
+  return filteredList;
+};
 
-module.exports = { findUserByEmail };
+
+
+module.exports = { findUserByEmail, urlsForUser };
