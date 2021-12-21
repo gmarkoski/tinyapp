@@ -3,8 +3,8 @@ const app = express();
 const PORT = 8082;
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
-const { findUserByEmail } = require('./helpers');
-const { urlsForUser } = require('./helpers');
+const { findUserByEmail, urlsForUser } = require('./helpers');
+
 
 app.set("view engine", "ejs");
 app.use(
@@ -19,7 +19,6 @@ const generateRandomString = function() {
   return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 6);
 };
 const bodyParser = require("body-parser");
-const res = require("express/lib/response");
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const users = {
@@ -46,14 +45,12 @@ const urlDatabase = {
   }
 };
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+
 
 app.get("/", (req, res) => {
   const userID = req.session['user_id'];
   if (!userID) {
-    res.redirect("/login");
+    return res.redirect("/login");
   }
   res.redirect("urls");
 });
@@ -62,9 +59,6 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello<b>World</b></body></html>\n");
-});
 
 // ***URL Stuff****
 
@@ -84,7 +78,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -239,4 +233,8 @@ app.post("/register", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
