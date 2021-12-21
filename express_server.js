@@ -3,8 +3,8 @@ const app = express();
 const PORT = 8082;
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
-const { findUserByEmail, urlsForUser } = require('./helpers');
-
+const { findUserByEmail } = require('./helpers');
+const { urlsForUser } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(
@@ -19,6 +19,7 @@ const generateRandomString = function() {
   return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 6);
 };
 const bodyParser = require("body-parser");
+const res = require("express/lib/response");
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const users = {
@@ -45,7 +46,9 @@ const urlDatabase = {
   }
 };
 
-
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
 
 app.get("/", (req, res) => {
   const userID = req.session['user_id'];
@@ -78,7 +81,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].longURL;
+  let longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
@@ -101,9 +104,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session.userId;
   const urlRecord = urlDatabase[req.params.shortURL];
-  console.log("+++++++", userId);
-  console.log(">>>>>>>>", urlDatabase);
-
+  
   if (!userId || userId !== urlRecord.userID) {
     res.status(403).send(`You must be logged in to edit short URLs. <a href="/login">Log Into Your Account </a>`);
     return;
@@ -233,8 +234,4 @@ app.post("/register", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
 });

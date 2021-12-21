@@ -1,5 +1,5 @@
 const findUserByEmail = (email, users) => {
-  for (const userId in users) {
+  for (userId in users) {
     const user = users[userId];
     if (user.email === email) {
       return user;
