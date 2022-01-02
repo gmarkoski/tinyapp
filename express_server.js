@@ -43,6 +43,10 @@ const urlDatabase = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW"
+  },
+  i3BoGx: {
+    longURL: "https://www.calgarysun.com",
+    userID: "aJ48lW"
   }
 };
 
@@ -81,7 +85,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -89,7 +93,6 @@ app.get("/urls/new", (req, res) => {
   
   const userId = req.session.userId;
   
-  console.log(req.session.userId);
   if (!userId) {                                   // if  not logged in, redirect them to login
     res.redirect("/login");
   } else {
@@ -163,6 +166,8 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
   urlDatabase[shortURL] = {longURL: longURL, userID: userID};
+  console.log('inside of POST');
+  console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
